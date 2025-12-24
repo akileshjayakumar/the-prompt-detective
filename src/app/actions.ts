@@ -58,13 +58,16 @@ TASK: Create a case where a flawed prompt (missing ${randomElement.toUpperCase()
 
 RULES:
 - Pick a relatable everyday scenario (work emails, recipes, social media, travel, shopping, relationships, etc.)
-- The flaw must be discoverable by comparing prompt vs output
-- Backstory: describe WHO + WHAT happened, NOT what was missing (keep it mysterious)
-- Faulty output should be plausible but clearly wrong in a funny way
-- IMPORTANT: The faulty prompt must be DETAILED (2-3 sentences) and include SOME CO-STAR elements, just subtly missing ${randomElement.toUpperCase()}. Don't make it obvious - it should feel like a real prompt someone would write.
+- The flaw must be discoverable by comparing prompt vs output.
+- Backstory: describe WHO + WHAT happened, NOT what was missing (keep it mysterious).
+- Faulty output should be plausible but clearly wrong in a funny way.
+- IMPORTANT: The faulty prompt must be written as a NATURAL, CONVERSATIONAL request (2-3 sentences).
+- DO NOT use labels like "Context:", "Objective:", "Style:", "Tone:", "Audience:", or "Response:".
+- Instead, weave the CO-STAR elements naturally into the text as a human would write it.
+- The prompt should subtly miss the ${randomElement.toUpperCase()} element while providing enough detail for the others.
 
 JSON only:
-{"id":"${caseNumber}","title":"The Case of [Creative Title]","backstory":"[2 sentences: person + situation + result, no hints about the flaw]","faultyPrompt":"[detailed 2-3 sentence prompt that includes some CO-STAR elements but subtly misses ${randomElement}]","faultyOutput":"[AI response showing the ${randomElement} problem]","botchedElement":"${randomElement}","botchedExplanation":"[why ${randomElement} caused this]","idealPrompt":"[fixed prompt with proper ${randomElement}]"}`;
+{"id":"${caseNumber}","title":"The Case of [Creative Title]","backstory":"[2 sentences: person + situation + result, no hints about the flaw]","faultyPrompt":"[A natural, 2-3 sentence conversational prompt that misses ${randomElement}. NO LABELS.]","faultyOutput":"[AI response showing the ${randomElement} problem]","botchedElement":"${randomElement}","botchedExplanation":"[why ${randomElement} caused this]","idealPrompt":"[A natural, conversational fix that includes ${randomElement} without using labels.]"}`;
 
   try {
     const response = await ai.models.generateContent({
@@ -208,8 +211,12 @@ Flawed prompt: "${caseData.faultyPrompt}"
 Botched element: ${caseData.botchedElement}
 Ideal fix: "${caseData.idealPrompt}"
 
-Incorrect options should: fix wrong element, be too vague, or miss the point.
-Shuffle correct answer position randomly.
+RULES FOR OPTIONS:
+- Each option must be a NATURAL, CONVERSATIONAL prompt.
+- DO NOT use labels like "Context:", "Objective:", etc.
+- Incorrect options should: fix the wrong element, be too vague, or miss the point entirely.
+- The correct option should be a natural-sounding improvement that addresses the ${caseData.botchedElement}.
+- Shuffle correct answer position randomly.
 
 JSON only:
 {"options":[{"id":"A","promptText":"...","isCorrect":true/false,"explanation":"..."},{"id":"B",...},{"id":"C",...},{"id":"D",...}]}`;
