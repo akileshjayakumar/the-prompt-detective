@@ -685,10 +685,12 @@ export default function Home() {
                 href="https://www.akileshjayakumar.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-stone-800 transition-all hover:-translate-y-0.5 font-medium sm:w-auto w-full justify-center underline underline-offset-4"
+                className="flex items-center gap-1.5 hover:text-stone-800 transition-all hover:-translate-y-0.5 font-medium sm:w-auto w-full justify-center"
               >
                 <span>👨‍💻</span>
-                <span>akileshjayakumar.com</span>
+                <span className="underline underline-offset-4">
+                  akileshjayakumar.com
+                </span>
               </a>
             </div>
           </footer>
@@ -756,10 +758,12 @@ export default function Home() {
               href="https://www.akileshjayakumar.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-stone-800 transition-colors font-medium sm:w-auto w-full justify-center"
+              className="flex items-center gap-1.5 hover:text-stone-800 transition-all hover:-translate-y-0.5 font-medium sm:w-auto w-full justify-center"
             >
               <span>👨‍💻</span>
-              <span>akileshjayakumar.com</span>
+              <span className="underline underline-offset-4">
+                akileshjayakumar.com
+              </span>
             </a>
           </div>
         </footer>
