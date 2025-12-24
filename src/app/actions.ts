@@ -69,35 +69,24 @@ RULES:
 JSON only:
 {"id":"${caseNumber}","title":"The Case of [Creative Title]","backstory":"[2 sentences: person + situation + result, no hints about the flaw]","faultyPrompt":"[A natural, 2-3 sentence conversational prompt that misses ${randomElement}. NO LABELS.]","faultyOutput":"[AI response showing the ${randomElement} problem]","botchedElement":"${randomElement}","botchedExplanation":"[why ${randomElement} caused this]","idealPrompt":"[A natural, conversational fix that includes ${randomElement} without using labels.]"}`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-    });
+  while (true) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
 
-    const text = response.text || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as CaseData;
+      const text = response.text || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]) as CaseData;
+      }
+      throw new Error("No valid JSON in response");
+    } catch (error) {
+      console.error("Case generation failed, retrying...", error);
+      // Small delay to prevent tight loops in case of persistent errors
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    throw new Error("No valid JSON in response");
-  } catch (error) {
-    console.error("Case generation failed:", error);
-    // Fallback case
-    return {
-      id: "case-fallback",
-      title: "The Case of the Confusing Recipe",
-      backstory:
-        "A home cook turned to AI for a cake recipe, but the result was wildly inappropriate for their needs...",
-      faultyPrompt: "Give me a cake recipe",
-      faultyOutput:
-        "To prepare the gateau, begin by tempering the chocolate using the bain-marie technique, ensuring precise emulsification at 31°C...",
-      botchedElement: "audience",
-      botchedExplanation:
-        "The prompt didn't specify the audience. The AI assumed a professional pastry chef, not a casual home baker.",
-      idealPrompt:
-        "Give me a simple chocolate cake recipe for a beginner home cook. Use easy-to-find ingredients and simple steps.",
-    };
   }
 }
 
@@ -162,34 +151,23 @@ Return ONLY valid JSON:
 }
 `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: evalPrompt,
-    });
+  while (true) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: evalPrompt,
+      });
 
-    const text = response.text || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as VerdictData;
+      const text = response.text || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]) as VerdictData;
+      }
+      throw new Error("No valid JSON");
+    } catch (error) {
+      console.error("Evaluation failed, retrying...", error);
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    throw new Error("No valid JSON");
-  } catch {
-    return {
-      success: false,
-      overallScore: 50,
-      elementScores: {
-        context: 50,
-        objective: 50,
-        style: 50,
-        tone: 50,
-        audience: 50,
-        response: 50,
-      },
-      newOutput: "The case file was corrupted. Please try again.",
-      caseSummary:
-        "The investigation hit a snag. Review your evidence and try again.",
-    };
   }
 }
 
@@ -221,51 +199,25 @@ RULES FOR OPTIONS:
 JSON only:
 {"options":[{"id":"A","promptText":"...","isCorrect":true/false,"explanation":"..."},{"id":"B",...},{"id":"C",...},{"id":"D",...}]}`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-    });
+  while (true) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
 
-    const text = response.text || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      // Sort options alphabetically by ID (A, B, C, D)
-      const options = parsed.options as RectificationOption[];
-      return options.sort((a, b) => a.id.localeCompare(b.id));
+      const text = response.text || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        // Sort options alphabetically by ID (A, B, C, D)
+        const options = parsed.options as RectificationOption[];
+        return options.sort((a, b) => a.id.localeCompare(b.id));
+      }
+      throw new Error("No valid JSON");
+    } catch (error) {
+      console.error("Option generation failed, retrying...", error);
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    throw new Error("No valid JSON");
-  } catch (error) {
-    console.error("Option generation failed:", error);
-    // Fallback options
-    return [
-      {
-        id: "A",
-        promptText: caseData.idealPrompt,
-        isCorrect: true,
-        explanation: `This correctly fixes the ${caseData.botchedElement} issue.`,
-      },
-      {
-        id: "B",
-        promptText: caseData.faultyPrompt + " Please be detailed.",
-        isCorrect: false,
-        explanation:
-          "This only adds a generic instruction without fixing the core issue.",
-      },
-      {
-        id: "C",
-        promptText: "Write something good for me.",
-        isCorrect: false,
-        explanation:
-          "This is too vague and doesn't address any CO-STAR elements.",
-      },
-      {
-        id: "D",
-        promptText: caseData.faultyPrompt + " Make it professional.",
-        isCorrect: false,
-        explanation: "This addresses style but not the actual botched element.",
-      },
-    ];
   }
 }
