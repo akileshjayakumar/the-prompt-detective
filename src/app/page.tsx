@@ -319,7 +319,7 @@ export default function Home() {
                     🛡️ Audit
                   </p>
                   <p className="text-red-700 text-xs sm:text-sm">
-                    Spot AI hallucinations in generated reports!
+                    Spot hallucinations in AI generated outputs!
                   </p>
                 </div>
               </div>
@@ -347,7 +347,7 @@ export default function Home() {
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
               size="lg"
             >
-              Start Playing! 🎮
+              Start Playing!
             </Button>
           </DialogFooter>
         </DialogContent>
