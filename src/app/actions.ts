@@ -52,50 +52,50 @@ export async function generateCase(): Promise<CaseData> {
   const randomElement =
     coStarElements[Math.floor(Math.random() * coStarElements.length)];
 
-  // Expanded scenario categories for variety
+  // Expanded scenario categories for variety - everyday, safe, and relatable
   const scenarios = [
-    // Work & Professional
-    "drafting a resignation letter",
-    "writing a performance review",
-    "requesting a raise via email",
-    "onboarding a new team member",
-    "presenting a project update to executives",
-    "handling a client complaint",
-    // Personal & Social
-    "writing a wedding speech",
-    "composing a dating app bio",
-    "apologizing to a friend",
-    "planning a surprise party",
-    "writing a sympathy card",
-    "crafting a roommate agreement",
-    // Creative & Entertainment
-    "writing a movie review",
-    "creating an Instagram caption",
-    "drafting a podcast intro",
-    "writing a short story opening",
-    "composing song lyrics",
-    "creating a D&D character backstory",
-    // Practical & Everyday
-    "writing a product return request",
-    "creating a grocery list",
-    "drafting a neighborhood complaint",
-    "writing a rental application",
-    "composing a vet appointment summary",
-    "creating a chore schedule",
-    // Technical & Educational
-    "explaining a concept to a child",
-    "writing documentation",
-    "creating a tutorial",
-    "summarizing a research paper",
-    "writing exam study notes",
-    "drafting a lab report",
-    // Health & Lifestyle
-    "creating a meal plan",
-    "writing a gym routine",
-    "journaling about mental health",
-    "writing a doctor's symptom summary",
-    "creating a sleep improvement plan",
-    "drafting wellness goals",
+    // Work & Team Collaboration
+    "planning a team lunch outing",
+    "writing a thank-you note to a colleague",
+    "drafting a meeting agenda",
+    "creating a welcome message for a new team member",
+    "summarizing meeting notes for the team",
+    "organizing a team-building activity",
+    // Community & Social Events
+    "planning a neighborhood potluck dinner",
+    "writing an invitation for a book club meeting",
+    "organizing a community volunteer day",
+    "creating a birthday party itinerary",
+    "drafting a thank-you card for a gift",
+    "planning a picnic with friends",
+    // Creative & Hobbies
+    "writing a movie review for a film blog",
+    "creating a playlist description for a road trip",
+    "drafting a caption for a travel photo",
+    "writing a book recommendation",
+    "creating a recipe card for a family dish",
+    "describing a favorite hobby to share online",
+    // Practical & Everyday Life
+    "writing a grocery list for a dinner party",
+    "creating a packing checklist for a vacation",
+    "drafting a schedule for a home renovation project",
+    "organizing a weekly meal plan",
+    "writing instructions for a pet sitter",
+    "creating a to-do list for a busy weekend",
+    // Learning & Education
+    "explaining a fun science fact to kids",
+    "writing study notes for an upcoming exam",
+    "creating a how-to guide for a craft project",
+    "summarizing a chapter from a textbook",
+    "drafting a presentation about a favorite topic",
+    "writing tips for learning a new language",
+    // Lifestyle & Wellness
+    "creating a morning routine guide",
+    "writing a beginner's workout plan",
+    "planning a relaxing weekend at home",
+    "drafting goals for the new year",
+    "creating a reading list for the month",
+    "writing tips for staying organized",
   ];
   const randomScenario =
     scenarios[Math.floor(Math.random() * scenarios.length)];
@@ -105,19 +105,42 @@ export async function generateCase(): Promise<CaseData> {
 TASK: Create a case where a flawed prompt (missing ${randomElement.toUpperCase()}) led to a funny/wrong AI output.
 SCENARIO MUST BE ABOUT: ${randomScenario}
 
-RULES:
-- Use the scenario above but make it fresh and unique.
-- The flaw must be discoverable by comparing prompt vs output.
-- Backstory: describe WHO + WHAT happened, NOT what was missing (keep it mysterious).
-- Faulty output should be plausible but clearly wrong in a funny way.
-- IMPORTANT: The faulty prompt must be written as a NATURAL, CONVERSATIONAL request (2-3 sentences).
-- DO NOT use labels like "Context:", "Objective:", "Style:", "Tone:", "Audience:", or "Response:".
-- Instead, weave the CO-STAR elements naturally into the text as a human would write it.
-- The prompt should subtly miss the ${randomElement.toUpperCase()} element while providing enough detail for the others.
-- BE CREATIVE! Avoid generic examples.
+CO-STAR ELEMENT DEFINITIONS (use these to create a clear, traceable flaw):
+- CONTEXT: Background information, situation, or setting that helps the AI understand the scenario
+- OBJECTIVE: The specific goal or task the user wants to accomplish
+- STYLE: The writing format (e.g., formal, casual, bullet points, paragraph, professional)
+- TONE: The emotional quality or attitude (e.g., friendly, serious, enthusiastic, sympathetic)
+- AUDIENCE: Who will read/use this content (e.g., children, executives, friends, customers)
+- RESPONSE: The expected format, length, or structure of the output
+
+CRITICAL RULES FOR QUALITY:
+1. THE FLAW MUST BE OBVIOUS: When someone reads the faultyPrompt, then reads the faultyOutput, they should immediately see WHY the output is wrong.
+
+2. DIRECT CAUSE-AND-EFFECT: The missing ${randomElement.toUpperCase()} must DIRECTLY cause the problem in the output. No vague connections.
+
+3. BACKSTORY RULES:
+   - Describe WHO (a relatable person with a simple role) + WHAT happened (the situation and funny result)
+   - Do NOT hint at what CO-STAR element was missing
+   - Keep it light, fun, and appropriate for all audiences
+
+4. FAULTY PROMPT RULES:
+   - Write as a NATURAL, CONVERSATIONAL request (2-3 sentences)
+   - NO LABELS like "Context:", "Objective:", etc.
+   - Must clearly be missing ${randomElement.toUpperCase()} while including the other elements
+   - The missing element should create an obvious gap that leads to the wrong output
+
+5. FAULTY OUTPUT RULES:
+   - Must be a DIRECT consequence of the missing ${randomElement.toUpperCase()}
+   - Should be plausible (the AI tried its best) but clearly wrong
+   - The wrongness should be funny and obvious, not subtle
+
+6. EXPLANATION RULES (THIS IS CRITICAL):
+   - MUST directly quote or reference specific text from BOTH the faultyPrompt AND the faultyOutput
+   - Use this format: "The prompt said '[quote from prompt]' but didn't specify [missing element]. As a result, the AI [what it did wrong], producing '[quote from output]' when it should have [what was expected]."
+   - The explanation must be verifiable - a reader should be able to look back at the prompt and output and confirm every claim
 
 JSON only:
-{"id":"${caseNumber}","title":"The Case of [Creative Title]","backstory":"[2 sentences: person + situation + result, no hints about the flaw]","faultyPrompt":"[A natural, 2-3 sentence conversational prompt that misses ${randomElement}. NO LABELS.]","faultyOutput":"[AI response showing the ${randomElement} problem]","botchedElement":"${randomElement}","botchedExplanation":"[why ${randomElement} caused this]","idealPrompt":"[A natural, conversational fix that includes ${randomElement} without using labels.]"}`;
+{"id":"${caseNumber}","title":"The Case of [Creative Title]","backstory":"[2 sentences: person + situation + funny result, no hints about the flaw]","faultyPrompt":"[A natural, 2-3 sentence conversational prompt that is clearly missing ${randomElement}. NO LABELS.]","faultyOutput":"[AI response that directly shows the ${randomElement} problem - must be traceable]","botchedElement":"${randomElement}","botchedExplanation":"[MUST quote from both the prompt AND output. Format: The prompt said '[X]' but didn't specify [missing element]. This caused the AI to [Y], resulting in '[Z from output]' instead of [expected].]","idealPrompt":"[A natural, conversational fix that adds ${randomElement} without using labels.]"}`;
 
   while (true) {
     try {
@@ -306,23 +329,23 @@ export interface MentorFeedback {
 export async function generateAuditCase(): Promise<AuditCaseData> {
   const caseNumber = Math.floor(Math.random() * 900) + 100;
 
-  // Varied domains for richer case generation
+  // Varied domains for richer case generation - everyday, safe, and relatable
   const domains = [
-    "a travel itinerary for a business trip",
-    "a medical summary for a patient visit",
-    "a legal contract summary",
-    "a financial investment report",
-    "a historical event summary",
-    "a recipe with nutritional information",
-    "a product comparison review",
-    "a scientific research abstract",
-    "a sports game analysis",
-    "a celebrity biography snippet",
-    "a real estate property listing",
-    "a university course syllabus",
-    "an event planning timeline",
-    "a tech product specification sheet",
-    "a movie plot summary with ratings",
+    "a weekend travel itinerary for a family trip",
+    "a summary of a popular book or novel",
+    "a recipe for a family dinner",
+    "a product review for kitchen appliances",
+    "an overview of a fun historical event",
+    "a comparison of popular coffee shops",
+    "a guide to local parks and hiking trails",
+    "a movie recommendation with plot summary",
+    "a pet adoption profile for an animal shelter",
+    "a description of a local community event",
+    "an itinerary for a birthday celebration",
+    "a packing list for a camping trip",
+    "a restaurant menu description",
+    "a summary of a popular podcast episode",
+    "a guide to beginner-friendly board games",
   ];
   const randomDomain = domains[Math.floor(Math.random() * domains.length)];
 

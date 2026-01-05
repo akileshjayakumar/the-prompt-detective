@@ -1419,19 +1419,22 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
                 >
+                  <span>made by</span>
                   <span>👨‍💻</span>
                   <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
                     akileshjayakumar.com
                   </span>
                 </a>
-              </div>
 
-              {/* Right: Date */}
-              <div className="flex justify-center md:justify-end">
-                <span className="text-xs text-stone-500 font-medium">
+                <span className="text-stone-300">|</span>
+
+                <span className="text-xs text-stone-700 font-medium">
                   Dec 2025
                 </span>
               </div>
+
+              {/* Right: Spacer */}
+              <div className="hidden md:block"></div>
             </div>
           </footer>
         </>
@@ -1511,19 +1514,22 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
               >
+                <span>made by</span>
                 <span>👨‍💻</span>
                 <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
                   akileshjayakumar.com
                 </span>
               </a>
-            </div>
 
-            {/* Right: Date */}
-            <div className="flex justify-center md:justify-end">
-              <span className="text-xs text-stone-500 font-medium">
+              <span className="text-stone-300">|</span>
+
+              <span className="text-xs text-stone-700 font-medium">
                 Dec 2025
               </span>
             </div>
+
+            {/* Right: Spacer */}
+            <div className="hidden md:block"></div>
           </div>
         </footer>
       )}
