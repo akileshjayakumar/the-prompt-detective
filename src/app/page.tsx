@@ -1353,12 +1353,12 @@ export default function Home() {
               <div className="hidden md:block"></div>
 
               {/* Center: Links */}
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-stone-600">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-medium text-stone-600">
                 <a
                   href="https://antigravity.google"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                  className="flex items-center gap-1.5 group"
                 >
                   <Image
                     src="/antigravity-icon.png"
@@ -1367,7 +1367,7 @@ export default function Home() {
                     height={18}
                     className="h-4 w-4"
                   />
-                  <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                  <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                     Built with Antigravity
                   </span>
                 </a>
@@ -1375,10 +1375,10 @@ export default function Home() {
                 <span className="text-stone-300">|</span>
 
                 <a
-                  href="https://ai.google.dev/gemini-api/docs/gemini-3"
+                  href="https://blog.google/products/gemini/gemini-3-flash/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                  className="flex items-center gap-1.5 group"
                 >
                   <Image
                     src="/gemini-icon.svg"
@@ -1387,7 +1387,7 @@ export default function Home() {
                     height={18}
                     className="h-4 w-4"
                   />
-                  <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                  <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                     Powered by Gemini 3 Flash
                   </span>
                 </a>
@@ -1398,7 +1398,7 @@ export default function Home() {
                   href="https://www.tech.gov.sg/technews/mastering-the-art-of-prompt-engineering-with-empower/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                  className="flex items-center gap-1.5 group"
                   title="Read about the CO-STAR framework"
                 >
                   <img
@@ -1406,8 +1406,8 @@ export default function Home() {
                     alt="GovTech Singapore"
                     className="h-6 w-auto object-contain"
                   />
-                  <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
-                    Inspired by GovTech&apos;s CO-STAR framework
+                  <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
+                    Inspired by GovTech&apos;s CO-STAR Framework
                   </span>
                 </a>
 
@@ -1417,18 +1417,18 @@ export default function Home() {
                   href="https://www.akileshjayakumar.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                  className="flex items-center gap-1.5 group"
                 >
-                  <span>made by</span>
+                  <span className="text-stone-600">made by</span>
                   <span>👨‍💻</span>
-                  <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                  <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                     akileshjayakumar.com
                   </span>
                 </a>
 
                 <span className="text-stone-300">|</span>
 
-                <span className="text-xs text-stone-700 font-medium">
+                <span className="text-sm text-stone-700 font-medium">
                   Dec 2025
                 </span>
               </div>
@@ -1448,12 +1448,12 @@ export default function Home() {
             <div className="hidden md:block"></div>
 
             {/* Center: Links */}
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-stone-600">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-medium text-stone-600">
               <a
                 href="https://antigravity.google"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                className="flex items-center gap-1.5 group"
               >
                 <Image
                   src="/antigravity-icon.png"
@@ -1462,7 +1462,7 @@ export default function Home() {
                   height={18}
                   className="h-4 w-4"
                 />
-                <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                   Built with Antigravity
                 </span>
               </a>
@@ -1473,7 +1473,7 @@ export default function Home() {
                 href="https://ai.google.dev/gemini-api/docs/gemini-3"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                className="flex items-center gap-1.5 group"
               >
                 <Image
                   src="/gemini-icon.svg"
@@ -1482,7 +1482,7 @@ export default function Home() {
                   height={18}
                   className="h-4 w-4"
                 />
-                <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                   Powered by Gemini 3 Flash
                 </span>
               </a>
@@ -1493,7 +1493,7 @@ export default function Home() {
                 href="https://www.tech.gov.sg/technews/mastering-the-art-of-prompt-engineering-with-empower/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                className="flex items-center gap-1.5 group"
                 title="Read about the CO-STAR framework"
               >
                 <img
@@ -1501,7 +1501,7 @@ export default function Home() {
                   alt="GovTech Singapore"
                   className="h-6 w-auto object-contain"
                 />
-                <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                   Inspired by GovTech&apos;s CO-STAR Framework
                 </span>
               </a>
@@ -1512,18 +1512,18 @@ export default function Home() {
                 href="https://www.akileshjayakumar.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-stone-900 transition-all hover:-translate-y-0.5"
+                className="flex items-center gap-1.5 group"
               >
-                <span>made by</span>
+                <span className="text-stone-600">made by</span>
                 <span>👨‍💻</span>
-                <span className="underline underline-offset-4 decoration-stone-500 hover:decoration-stone-900">
+                <span className="underline underline-offset-4 decoration-stone-500 group-hover:decoration-stone-900 group-hover:text-stone-900 group-hover:-translate-y-0.5 transition-all inline-block">
                   akileshjayakumar.com
                 </span>
               </a>
 
               <span className="text-stone-300">|</span>
 
-              <span className="text-xs text-stone-700 font-medium">
+              <span className="text-sm text-stone-700 font-medium">
                 Dec 2025
               </span>
             </div>
