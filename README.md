@@ -88,4 +88,4 @@ MIT License — feel free to use, modify, and share!
 
 ---
 
-Built using [Antigravity](https://antigravity.ai) · Powered by [Gemini 3 Flash](https://ai.google.dev/)
+
