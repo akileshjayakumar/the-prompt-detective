@@ -4,6 +4,89 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MS = 10 * 1000; // 10 seconds
+const USE_MOCK_CASES = process.env.MOCK_CASES === "1";
+
+type CachedItem<T> = {
+  data: T;
+  createdAt: number;
+  lastGeneratedAt: number;
+  lastServedAt: number;
+};
+
+type SessionCache = {
+  detective?: CachedItem<CaseData>;
+  audit?: CachedItem<AuditCaseData>;
+};
+
+type CacheGlobals = {
+  __promptDetectiveSessionCache?: Map<string, SessionCache>;
+  __promptDetectiveOptionsCache?: Map<string, CachedItem<RectificationOption[]>>;
+  __promptDetectiveCleanupCounter?: number;
+};
+
+const cacheGlobals = globalThis as unknown as CacheGlobals;
+const sessionCache =
+  cacheGlobals.__promptDetectiveSessionCache ??
+  (cacheGlobals.__promptDetectiveSessionCache = new Map());
+const optionsCache =
+  cacheGlobals.__promptDetectiveOptionsCache ??
+  (cacheGlobals.__promptDetectiveOptionsCache = new Map());
+
+function getSessionCache(sessionId: string): SessionCache {
+  const existing = sessionCache.get(sessionId);
+  if (existing) {
+    return existing;
+  }
+  const next: SessionCache = {};
+  sessionCache.set(sessionId, next);
+  return next;
+}
+
+function isFresh(item?: CachedItem<unknown>): boolean {
+  if (!item) return false;
+  return Date.now() - item.createdAt < CACHE_TTL_MS;
+}
+
+function shouldRateLimit(item?: CachedItem<unknown>): boolean {
+  if (!item) return false;
+  return Date.now() - item.lastGeneratedAt < RATE_LIMIT_MS;
+}
+
+function touch(item?: CachedItem<unknown>): void {
+  if (item) {
+    item.lastServedAt = Date.now();
+  }
+}
+
+function maybeCleanupCaches(): void {
+  const counter = (cacheGlobals.__promptDetectiveCleanupCounter ?? 0) + 1;
+  cacheGlobals.__promptDetectiveCleanupCounter = counter;
+  if (counter % 50 !== 0) return;
+
+  const now = Date.now();
+  for (const [key, session] of sessionCache) {
+    const detectiveStale =
+      session.detective &&
+      now - session.detective.lastServedAt > CACHE_TTL_MS * 2;
+    const auditStale =
+      session.audit && now - session.audit.lastServedAt > CACHE_TTL_MS * 2;
+
+    if (detectiveStale) delete session.detective;
+    if (auditStale) delete session.audit;
+    if (!session.detective && !session.audit) {
+      sessionCache.delete(key);
+    }
+  }
+
+  for (const [key, options] of optionsCache) {
+    if (now - options.lastServedAt > CACHE_TTL_MS * 2) {
+      optionsCache.delete(key);
+    }
+  }
+}
+
 export interface CaseData {
   id: string;
   title: string;
@@ -19,6 +102,36 @@ export interface CaseData {
     | "response";
   botchedExplanation: string;
   idealPrompt: string;
+}
+
+function createMockCase(): CaseData {
+  const caseNumber = Math.floor(Math.random() * 900) + 100;
+  const elements: CaseData["botchedElement"][] = [
+    "context",
+    "objective",
+    "style",
+    "tone",
+    "audience",
+    "response",
+  ];
+  const botchedElement =
+    elements[Math.floor(Math.random() * elements.length)];
+
+  return {
+    id: String(caseNumber),
+    title: "The Case of the Mixed-Up Message",
+    backstory:
+      "Alex asked for a quick note for neighbors, but the AI replied like a courtroom announcement. Everyone laughed at how dramatic it sounded.",
+    faultyPrompt:
+      "Can you write a short note inviting my neighbors over for dinner tonight? Please keep it brief.",
+    faultyOutput:
+      "By order of the household, all residents are hereby summoned to dinner at 7 PM.",
+    botchedElement,
+    botchedExplanation:
+      "The prompt said 'write a short note' but didn't specify tone. As a result, the AI wrote 'By order of the household,' which sounds overly formal instead of friendly.",
+    idealPrompt:
+      "Write a short, friendly note inviting my neighbors over for dinner tonight at 7 PM.",
+  };
 }
 
 export interface VerdictData {
@@ -37,7 +150,39 @@ export interface VerdictData {
 }
 
 // Generate a new case for the player to solve
-export async function generateCase(): Promise<CaseData> {
+export async function generateCase(
+  sessionId?: string,
+  options?: { forceNew?: boolean }
+): Promise<CaseData> {
+  maybeCleanupCaches();
+
+  const sessionKey = sessionId || "anon";
+  const session = getSessionCache(sessionKey);
+  const cached = session.detective;
+
+  if (!options?.forceNew) {
+    if (isFresh(cached)) {
+      touch(cached);
+      return cached.data;
+    }
+    if (shouldRateLimit(cached)) {
+      touch(cached);
+      return cached.data;
+    }
+  }
+
+  if (USE_MOCK_CASES) {
+    const data = createMockCase();
+    const now = Date.now();
+    session.detective = {
+      data,
+      createdAt: now,
+      lastGeneratedAt: now,
+      lastServedAt: now,
+    };
+    return data;
+  }
+
   // Randomize to encourage variety
   const randomSeed = Math.floor(Math.random() * 100000);
   const caseNumber = Math.floor(Math.random() * 900) + 100; // 3-digit case number (100-999)
@@ -152,7 +297,15 @@ JSON only:
       const text = response.text || "";
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as CaseData;
+        const data = JSON.parse(jsonMatch[0]) as CaseData;
+        const now = Date.now();
+        session.detective = {
+          data,
+          createdAt: now,
+          lastGeneratedAt: now,
+          lastServedAt: now,
+        };
+        return data;
       }
       throw new Error("No valid JSON in response");
     } catch (error) {
@@ -252,10 +405,77 @@ export interface RectificationOption {
   explanation: string;
 }
 
+function createMockRectificationOptions(
+  caseData: CaseData
+): RectificationOption[] {
+  return [
+    {
+      id: "A",
+      promptText:
+        "Write a short, friendly invitation for my neighbors to come for dinner tonight at 7 PM.",
+      isCorrect: true,
+      explanation:
+        "This directly fixes the missing tone by explicitly making it friendly.",
+    },
+    {
+      id: "B",
+      promptText:
+        "Write a short invitation for my neighbors to come for dinner tonight.",
+      isCorrect: false,
+      explanation:
+        "Still missing a clear tone, so the output could sound too formal.",
+    },
+    {
+      id: "C",
+      promptText:
+        "Create a detailed, multi-paragraph dinner plan for a restaurant.",
+      isCorrect: false,
+      explanation:
+        "This changes the objective and doesn't address the missing element.",
+    },
+    {
+      id: "D",
+      promptText:
+        "Draft a very formal dinner summons for a corporate dinner event.",
+      isCorrect: false,
+      explanation:
+        "This makes the tone more formal, which worsens the original issue.",
+    },
+  ];
+}
+
 // Generate 4 rectification options (1 correct, 3 incorrect)
 export async function generateRectificationOptions(
-  caseData: CaseData
+  caseData: CaseData,
+  sessionId?: string
 ): Promise<RectificationOption[]> {
+  maybeCleanupCaches();
+
+  const optionsKey = `${sessionId || "anon"}:${caseData.id}:${
+    caseData.botchedElement
+  }:${caseData.faultyPrompt}`;
+  const cached = optionsCache.get(optionsKey);
+  if (isFresh(cached)) {
+    touch(cached);
+    return cached.data;
+  }
+  if (shouldRateLimit(cached)) {
+    touch(cached);
+    return cached.data;
+  }
+
+  if (USE_MOCK_CASES) {
+    const now = Date.now();
+    const options = createMockRectificationOptions(caseData);
+    optionsCache.set(optionsKey, {
+      data: options,
+      createdAt: now,
+      lastGeneratedAt: now,
+      lastServedAt: now,
+    });
+    return options;
+  }
+
   const prompt = `Generate 4 multiple-choice prompts for a CO-STAR game. ONE correct, THREE incorrect.
 
 Flawed prompt: "${caseData.faultyPrompt}"
@@ -285,7 +505,15 @@ JSON only:
         const parsed = JSON.parse(jsonMatch[0]);
         // Sort options alphabetically by ID (A, B, C, D)
         const options = parsed.options as RectificationOption[];
-        return options.sort((a, b) => a.id.localeCompare(b.id));
+        const sorted = options.sort((a, b) => a.id.localeCompare(b.id));
+        const now = Date.now();
+        optionsCache.set(optionsKey, {
+          data: sorted,
+          createdAt: now,
+          lastGeneratedAt: now,
+          lastServedAt: now,
+        });
+        return sorted;
       }
       throw new Error("No valid JSON");
     } catch (error) {
@@ -314,6 +542,45 @@ export interface AuditCaseData {
   }[];
 }
 
+function createMockAuditCase(): AuditCaseData {
+  const caseNumber = Math.floor(Math.random() * 900) + 100;
+  const aiOutput = [
+    "We will visit the Eiffel Tower on Saturday morning.",
+    "Bring warm jackets because it always snows in July.",
+    "For lunch, try local seafood by the pier.",
+    "On Sunday, ride bikes along the waterfront trail.",
+  ].join(" ");
+  const sentences = aiOutput
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => s.trim().length > 0);
+
+  return {
+    id: String(caseNumber),
+    title: "The Mixed-Up Trip",
+    originalPrompt:
+      "Plan a kid-friendly weekend itinerary for a family trip to Seattle.",
+    keyPoints: [
+      { emoji: "📋", label: "Task", value: "Weekend itinerary" },
+      { emoji: "📍", label: "About", value: "Seattle family trip" },
+      { emoji: "⚠️", label: "Rule", value: "Kid-friendly activities" },
+    ],
+    aiOutput,
+    sentences,
+    bugs: [
+      {
+        id: "bug-1",
+        text: "We will visit the Eiffel Tower on Saturday morning.",
+        explanation: "The Eiffel Tower is in Paris, not Seattle.",
+      },
+      {
+        id: "bug-2",
+        text: "Bring warm jackets because it always snows in July.",
+        explanation: "Seattle does not always snow in July.",
+      },
+    ],
+  };
+}
+
 export interface MentorFeedback {
   feedback: {
     element: string;
@@ -326,7 +593,39 @@ export interface MentorFeedback {
 }
 
 // Generate a case for the AI Auditor mode
-export async function generateAuditCase(): Promise<AuditCaseData> {
+export async function generateAuditCase(
+  sessionId?: string,
+  options?: { forceNew?: boolean }
+): Promise<AuditCaseData> {
+  maybeCleanupCaches();
+
+  const sessionKey = sessionId || "anon";
+  const session = getSessionCache(sessionKey);
+  const cached = session.audit;
+
+  if (!options?.forceNew) {
+    if (isFresh(cached)) {
+      touch(cached);
+      return cached.data;
+    }
+    if (shouldRateLimit(cached)) {
+      touch(cached);
+      return cached.data;
+    }
+  }
+
+  if (USE_MOCK_CASES) {
+    const data = createMockAuditCase();
+    const now = Date.now();
+    session.audit = {
+      data,
+      createdAt: now,
+      lastGeneratedAt: now,
+      lastServedAt: now,
+    };
+    return data;
+  }
+
   const caseNumber = Math.floor(Math.random() * 900) + 100;
 
   // Varied domains for richer case generation - everyday, safe, and relatable
@@ -395,10 +694,18 @@ JSON only:
         const sentences = parsed.aiOutput
           .split(/(?<=[.!?])\s+/)
           .filter((s: string) => s.trim().length > 0);
-        return {
+        const data = {
           ...parsed,
           sentences,
         } as AuditCaseData;
+        const now = Date.now();
+        session.audit = {
+          data,
+          createdAt: now,
+          lastGeneratedAt: now,
+          lastServedAt: now,
+        };
+        return data;
       }
       throw new Error("No valid JSON");
     } catch (error) {
