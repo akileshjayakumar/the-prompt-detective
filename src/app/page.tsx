@@ -201,7 +201,7 @@ export default function Home() {
     const auditCacheFresh =
       cached?.audit && now - cached.audit.cachedAt < CLIENT_CACHE_TTL_MS;
 
-    if (detectiveCacheFresh) {
+    if (detectiveCacheFresh && cached?.detective) {
       setCaseData(cached.detective.data);
       setRectificationOptions(cached.detective.options || []);
       setIsLoadingOptions(false);
@@ -210,7 +210,7 @@ export default function Home() {
       setPhase("loading");
     }
 
-    if (auditCacheFresh) {
+    if (auditCacheFresh && cached?.audit) {
       setAuditData(cached.audit.data);
     }
 
@@ -251,18 +251,19 @@ export default function Home() {
         cached?.detective &&
         (!cached.detective.options || cached.detective.options.length === 0)
       ) {
+        const detective = cached.detective;
         setIsLoadingOptions(true);
         tasks.push(
           (async () => {
             const options = await generateRectificationOptions(
-              cached.detective.data,
+              detective.data,
               sessionId
             );
             setRectificationOptions(options);
             setIsLoadingOptions(false);
             updateClientCache({
               detective: {
-                data: cached.detective.data,
+                data: detective.data,
                 options,
                 cachedAt: Date.now(),
               },
