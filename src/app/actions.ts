@@ -44,12 +44,12 @@ function getSessionCache(sessionId: string): SessionCache {
   return next;
 }
 
-function isFresh<T>(item?: CachedItem<T>): item is CachedItem<T> {
+function isFresh<T>(item?: CachedItem<T>): boolean {
   if (!item) return false;
   return Date.now() - item.createdAt < CACHE_TTL_MS;
 }
 
-function shouldRateLimit<T>(item?: CachedItem<T>): item is CachedItem<T> {
+function shouldRateLimit<T>(item?: CachedItem<T>): boolean {
   if (!item) return false;
   return Date.now() - item.lastGeneratedAt < RATE_LIMIT_MS;
 }
@@ -160,7 +160,7 @@ export async function generateCase(
   const session = getSessionCache(sessionKey);
   const cached = session.detective;
 
-  if (!options?.forceNew) {
+  if (!options?.forceNew && cached) {
     if (isFresh(cached)) {
       touch(cached);
       return cached.data;
@@ -455,11 +455,11 @@ export async function generateRectificationOptions(
     caseData.botchedElement
   }:${caseData.faultyPrompt}`;
   const cached = optionsCache.get(optionsKey);
-  if (isFresh(cached)) {
+  if (cached && isFresh(cached)) {
     touch(cached);
     return cached.data;
   }
-  if (shouldRateLimit(cached)) {
+  if (cached && shouldRateLimit(cached)) {
     touch(cached);
     return cached.data;
   }
@@ -603,7 +603,7 @@ export async function generateAuditCase(
   const session = getSessionCache(sessionKey);
   const cached = session.audit;
 
-  if (!options?.forceNew) {
+  if (!options?.forceNew && cached) {
     if (isFresh(cached)) {
       touch(cached);
       return cached.data;
