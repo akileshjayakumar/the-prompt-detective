@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   generateCase,
   generateRectificationOptions,
@@ -100,9 +100,60 @@ type GamePhase =
   | "auditing"
   | "sandbox-input";
 
+const SESSION_ID_KEY = "prompt-detective-session-id";
+const CLIENT_CACHE_KEY = "prompt-detective-cache-v1";
+const CLIENT_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+type ClientCache = {
+  detective?: {
+    data: CaseData;
+    options: RectificationOption[];
+    cachedAt: number;
+  };
+  audit?: {
+    data: AuditCaseData;
+    cachedAt: number;
+  };
+};
+
+function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return "anon";
+  const existing = window.localStorage.getItem(SESSION_ID_KEY);
+  if (existing) return existing;
+  const generated =
+    typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID()
+      : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  window.localStorage.setItem(SESSION_ID_KEY, generated);
+  return generated;
+}
+
+function readClientCache(): ClientCache | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(CLIENT_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ClientCache;
+  } catch (error) {
+    console.warn("Failed to parse client cache", error);
+    return null;
+  }
+}
+
+function writeClientCache(next: ClientCache): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CLIENT_CACHE_KEY, JSON.stringify(next));
+}
+
+function updateClientCache(update: Partial<ClientCache>): void {
+  const current = readClientCache() ?? {};
+  writeClientCache({ ...current, ...update });
+}
+
 export default function Home() {
   const [mode, setMode] = useState<GameMode>("detective");
   const [phase, setPhase] = useState<GamePhase>("loading");
+  const sessionIdRef = useRef<string>("");
 
   // Detective Mode State
   const [caseData, setCaseData] = useState<CaseData | null>(null);
@@ -139,26 +190,105 @@ export default function Home() {
   useEffect(() => {
     setShowOnboarding(true);
 
-    // Pre-generate content for Detective and Auditor modes in parallel
-    const preGenerateContent = async () => {
-      setPhase("loading");
+    const sessionId = getOrCreateSessionId();
+    sessionIdRef.current = sessionId;
 
-      // Generate both cases in parallel
-      const [detectiveCase, auditorCase] = await Promise.all([
-        generateCase(),
-        generateAuditCase(),
-      ]);
+    const cached = readClientCache();
+    const now = Date.now();
+    const detectiveCacheFresh =
+      cached?.detective &&
+      now - cached.detective.cachedAt < CLIENT_CACHE_TTL_MS;
+    const auditCacheFresh =
+      cached?.audit && now - cached.audit.cachedAt < CLIENT_CACHE_TTL_MS;
 
-      setCaseData(detectiveCase);
-      setAuditData(auditorCase);
-
-      // Pre-generate rectification options for detective mode
-      generateRectificationOptions(detectiveCase).then((options) => {
-        setRectificationOptions(options);
-      });
-
-      // Set initial phase based on default mode (detective)
+    if (detectiveCacheFresh) {
+      setCaseData(cached.detective.data);
+      setRectificationOptions(cached.detective.options || []);
+      setIsLoadingOptions(false);
       setPhase("investigate");
+    } else {
+      setPhase("loading");
+    }
+
+    if (auditCacheFresh) {
+      setAuditData(cached.audit.data);
+    }
+
+    const preGenerateContent = async () => {
+      const tasks: Promise<void>[] = [];
+
+      if (!detectiveCacheFresh) {
+        tasks.push(
+          (async () => {
+            const detectiveCase = await generateCase(sessionId);
+            setCaseData(detectiveCase);
+            setPhase("investigate");
+            updateClientCache({
+              detective: {
+                data: detectiveCase,
+                options: [],
+                cachedAt: Date.now(),
+              },
+            });
+
+            setIsLoadingOptions(true);
+            const options = await generateRectificationOptions(
+              detectiveCase,
+              sessionId
+            );
+            setRectificationOptions(options);
+            setIsLoadingOptions(false);
+            updateClientCache({
+              detective: {
+                data: detectiveCase,
+                options,
+                cachedAt: Date.now(),
+              },
+            });
+          })()
+        );
+      } else if (
+        cached?.detective &&
+        (!cached.detective.options || cached.detective.options.length === 0)
+      ) {
+        setIsLoadingOptions(true);
+        tasks.push(
+          (async () => {
+            const options = await generateRectificationOptions(
+              cached.detective.data,
+              sessionId
+            );
+            setRectificationOptions(options);
+            setIsLoadingOptions(false);
+            updateClientCache({
+              detective: {
+                data: cached.detective.data,
+                options,
+                cachedAt: Date.now(),
+              },
+            });
+          })()
+        );
+      }
+
+      if (!auditCacheFresh) {
+        tasks.push(
+          (async () => {
+            const auditorCase = await generateAuditCase(sessionId);
+            setAuditData(auditorCase);
+            updateClientCache({
+              audit: {
+                data: auditorCase,
+                cachedAt: Date.now(),
+              },
+            });
+          })()
+        );
+      }
+
+      if (tasks.length > 0) {
+        await Promise.all(tasks);
+      }
     };
 
     preGenerateContent();
@@ -182,29 +312,56 @@ export default function Home() {
   }, [mode, caseData, auditData]);
 
   const loadNewCase = async () => {
+    const sessionId = sessionIdRef.current || getOrCreateSessionId();
+    sessionIdRef.current = sessionId;
+
     setPhase("loading");
     setSelectedElement(null);
     setDeductionResult(null);
     setRectificationOptions([]);
     setSelectedOption(null);
     setRectifyResult(null);
+    setIsLoadingOptions(true);
 
-    const newCase = await generateCase();
+    const newCase = await generateCase(sessionId, { forceNew: true });
     setCaseData(newCase);
     setPhase("investigate");
+    updateClientCache({
+      detective: {
+        data: newCase,
+        options: [],
+        cachedAt: Date.now(),
+      },
+    });
 
-    generateRectificationOptions(newCase).then((options) => {
-      setRectificationOptions(options);
+    const options = await generateRectificationOptions(newCase, sessionId);
+    setRectificationOptions(options);
+    setIsLoadingOptions(false);
+    updateClientCache({
+      detective: {
+        data: newCase,
+        options,
+        cachedAt: Date.now(),
+      },
     });
   };
 
   const loadAuditCase = async () => {
+    const sessionId = sessionIdRef.current || getOrCreateSessionId();
+    sessionIdRef.current = sessionId;
+
     setPhase("loading");
     setFlaggedBugs([]);
     setShowAuditResult(false);
-    const data = await generateAuditCase();
+    const data = await generateAuditCase(sessionId, { forceNew: true });
     setAuditData(data);
     setPhase("auditing");
+    updateClientCache({
+      audit: {
+        data,
+        cachedAt: Date.now(),
+      },
+    });
   };
 
   const handleSandboxSubmit = async () => {
