@@ -44,12 +44,12 @@ function getSessionCache(sessionId: string): SessionCache {
   return next;
 }
 
-function isFresh(item?: CachedItem<unknown>): boolean {
+function isFresh<T>(item?: CachedItem<T>): item is CachedItem<T> {
   if (!item) return false;
   return Date.now() - item.createdAt < CACHE_TTL_MS;
 }
 
-function shouldRateLimit(item?: CachedItem<unknown>): boolean {
+function shouldRateLimit<T>(item?: CachedItem<T>): item is CachedItem<T> {
   if (!item) return false;
   return Date.now() - item.lastGeneratedAt < RATE_LIMIT_MS;
 }
