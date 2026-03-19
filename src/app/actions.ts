@@ -1,8 +1,6 @@
 "use server";
 
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+import { generateText, gateway } from "ai";
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MS = 10 * 1000; // 10 seconds
@@ -289,9 +287,9 @@ JSON only:
 
   while (true) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await generateText({
+        model: gateway("google/gemini-3-flash"),
+        prompt: prompt,
       });
 
       const text = response.text || "";
@@ -379,9 +377,9 @@ Return ONLY valid JSON:
 
   while (true) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: evalPrompt,
+      const response = await generateText({
+        model: gateway("google/gemini-3-flash"),
+        prompt: evalPrompt,
       });
 
       const text = response.text || "";
@@ -494,9 +492,9 @@ JSON only:
 
   while (true) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await generateText({
+        model: gateway("google/gemini-3-flash"),
+        prompt: prompt,
       });
 
       const text = response.text || "";
@@ -681,9 +679,9 @@ JSON only:
 
   while (true) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await generateText({
+        model: gateway("google/gemini-3-flash"),
+        prompt: prompt,
       });
 
       const text = response.text || "";
@@ -758,9 +756,9 @@ JSON only:
 
   while (true) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: coachPrompt,
+      const response = await generateText({
+        model: gateway("google/gemini-3-flash"),
+        prompt: coachPrompt,
       });
 
       const text = response.text || "";
